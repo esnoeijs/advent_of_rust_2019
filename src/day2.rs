@@ -10,16 +10,31 @@ pub fn solution(filename: &String) {
         .collect()
     ;
 
-    println!("{:?}", calculate_operations(sequence));
+    println!("{:?}", calculate_operations(sequence.clone()));
+    println!("{:?}", oracle(19690720, sequence.clone()));
 }
 
+fn oracle(value: u32, mut sequence: Vec<u32>) -> u32
+{
+    let length = sequence.len() as u32;
+
+    for noun in 0..(99.min(length)) {
+        for verb in 0..(99.min(length)) {
+            sequence[1] = noun;
+            sequence[2] = verb;
+            if calculate_operations(sequence.clone())[0] == value {
+                return (noun * 100) + verb;
+            }
+        }
+    }
+
+    panic!("Not found values");
+}
 
 fn calculate_operations(mut sequence: Vec<u32>) -> Vec<u32>
 {
-    for mut index in 0..sequence.len() {
-
-        let idx = index * 4;
-
+    let mut idx = 0;
+    while idx <= sequence.len() {
         let operation: u32 = sequence.get(idx).copied().unwrap_or(99);
 
         if operation == 99 {
@@ -35,6 +50,8 @@ fn calculate_operations(mut sequence: Vec<u32>) -> Vec<u32>
             2 => sequence[pos] = sequence[a] * sequence[b],
             _ => break
         }
+
+        idx = idx + 4;
     };
 
     return sequence
@@ -45,23 +62,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn day1_test1() {
+    fn day2_test1() {
         assert_eq!(2, calculate_operations(vec![1,0,0,0,99])[0]);
     }
 
     #[test]
-    fn day1_test2() {
+    fn day2_test2() {
         assert_eq!(6, calculate_operations(vec![2,3,0,3,99])[3]);
     }
 
     #[test]
-    fn day1_test3() {
+    fn day2_test3() {
         assert_eq!(9801, calculate_operations(vec![2,4,4,5,99,0])[5]);
     }
 
     #[test]
-    fn day1_test4() {
+    fn day2_test4() {
         assert_eq!(30, calculate_operations(vec![1,1,1,4,99,5,6,0,99])[0]);
     }
-}
 
+    #[test]
+    fn day2_test5() {
+        assert_eq!(506, oracle(35,vec![1,0,0,0,99,15,20,0,99]));
+    }
+}
