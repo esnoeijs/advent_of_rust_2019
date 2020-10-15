@@ -1,5 +1,4 @@
 use std::fs;
-use std::cell::RefCell;
 use std::collections::HashMap;
 
 pub fn solution(filename: &String) {
@@ -28,7 +27,7 @@ struct Move {
 
 #[derive(Clone, Debug, PartialEq)]
 struct Wire {
-    route: RefCell<HashMap<Pos, Pos>>,
+    route: HashMap<Pos, Pos>,
     current: Pos,
 }
 
@@ -38,7 +37,7 @@ impl Wire {
         let mut map = HashMap::new();
         map.insert(Pos::start(), Pos::start());
         return Wire {
-            route: RefCell::new(map.clone()),
+            route: map.clone(),
             current: Pos::start(),
         };
     }
@@ -62,7 +61,7 @@ impl Wire {
                     Directions::L => Pos { x: pos.x - 1, y: pos.y },
                 };
 
-                self.route.borrow_mut().insert(new_pos.clone(), new_pos.clone());
+                self.route.insert(new_pos.clone(), new_pos.clone());
                 self.current = new_pos.clone();
             }
         }
@@ -113,8 +112,8 @@ impl From<&str> for Move {
 fn intersect(wire_a: &Wire, wire_b: &Wire) -> Vec<Pos>
 {
     let mut intersecting_positions: Vec<Pos> = vec![];
-    for pos in wire_a.route.borrow().keys() {
-        if wire_b.route.borrow().contains_key(pos) {
+    for pos in wire_a.route.keys() {
+        if wire_b.route.contains_key(pos) {
             if pos.x != 0 || pos.y != 0 {
                 intersecting_positions.push(pos.clone())
             }
