@@ -1,5 +1,4 @@
 use std::fs;
-use std::convert::{TryInto, TryFrom};
 use std::cell::RefCell;
 use std::collections::HashMap;
 
@@ -7,9 +6,7 @@ pub fn solution(filename: &String) {
     let contents = fs::read_to_string(filename)
         .expect("Something went wrong reading the file");
 
-    println!("{:?}", contents);
-
-    let wires: Vec<Wire> = contents.lines().map(|str| { Wire::try_from(str).unwrap() }).collect();
+    let wires: Vec<Wire> = contents.lines().map(|str| { Wire::from(str) }).collect();
     let wire_a = wires[0].clone();
     let wire_b = wires[1].clone();
 
@@ -83,29 +80,20 @@ impl Pos {
     {
         return Pos { x: 0, y: 0 };
     }
+}
 
-    fn new(x: i32, y: i32) -> Pos
+impl From<&str> for Wire {
+    fn from(str: &str) -> Self
     {
-        return Pos { x, y };
+        Wire::new_from_route(str.split(',').map(|x| { Move::from(x) }).collect())
     }
 }
 
-impl TryFrom<&str> for Wire {
-    type Error = ();
-
-    fn try_from(value: &str) -> Result<Self, Self::Error>
-    {
-        Ok(Wire::new_from_route(value.split(',').map(|x| { String::from(x).try_into().unwrap() }).collect()))
-    }
-}
-
-impl TryInto<Move> for String {
-    type Error = ();
-
-    fn try_into(self) -> Result<Move, Self::Error>
+impl From<&str> for Move {
+    fn from(str: &str) -> Self
     {
         let direction: Directions;
-        match self.chars().nth(0).unwrap() {
+        match str.chars().nth(0).unwrap() {
             'U' => direction = Directions::U,
             'D' => direction = Directions::D,
             'L' => direction = Directions::L,
@@ -113,12 +101,12 @@ impl TryInto<Move> for String {
             _ => panic!("unknown direction")
         }
 
-        let steps = (self[1..]).parse::<u32>();
-        // if steps.is_err() {
-        //     Err("not a number");
-        // }
+        let steps = (str[1..]).parse::<u32>();
+        if steps.is_err() {
+            panic!("not a number");
+        }
 
-        return Ok(Move { direction, steps: steps.unwrap() });
+        return Move { direction, steps: steps.unwrap() };
     }
 }
 
@@ -146,17 +134,17 @@ mod tests {
 
     #[test]
     fn test() {
-        let w1 = Wire::try_from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51").unwrap();
-        let w2 = Wire::try_from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7").unwrap();
+        let w1 = Wire::from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
+        let w2 = Wire::from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
         assert_eq!(135, intersect(&w1, &w2).iter().map(|x| { manhattan_distance([0, 0], [x.x, x.y]) }).min().unwrap());
 
-        let w1 = Wire::try_from("R75,D30,R83,U83,L12,D49,R71,U7,L72").unwrap();
-        let w2 = Wire::try_from("U62,R66,U55,R34,D71,R55,D58,R83").unwrap();
+        let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
+        let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
         assert_eq!(159, intersect(&w1, &w2).iter().map(|x| { manhattan_distance([0, 0], [x.x, x.y]) }).min().unwrap());
     }
 
     #[test]
     fn string_to_move_mapping() {
-        assert_eq!(Move { direction: Directions::U, steps: 1 }, String::from("U1").try_into().unwrap());
+        assert_eq!(Move { direction: Directions::U, steps: 1 }, Move::from("U1"));
     }
 }
