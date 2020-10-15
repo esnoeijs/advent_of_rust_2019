@@ -14,6 +14,12 @@ pub fn solution(filename: &String) {
         .map(|x| { manhattan_distance([0, 0], [x.x, x.y]) })
         .min()
         .unwrap());
+
+    println!("{:?}", intersect(&wire_a, &wire_b)
+        .iter()
+        .map(|x| { wire_a.clone().get_min_steps(x) + wire_b.clone().get_min_steps(x) })
+        .min()
+        .unwrap());
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
@@ -27,7 +33,7 @@ struct Move {
 
 #[derive(Clone, Debug, PartialEq)]
 struct Wire {
-    route: HashMap<Pos, Pos>,
+    route: HashMap<Pos, i32>,
     current: Pos,
 }
 
@@ -35,7 +41,7 @@ impl Wire {
     fn new() -> Wire
     {
         let mut map = HashMap::new();
-        map.insert(Pos::start(), Pos::start());
+        map.insert(Pos::start(), 0);
         return Wire {
             route: map.clone(),
             current: Pos::start(),
@@ -51,6 +57,7 @@ impl Wire {
 
     fn apply_moves(&mut self, moves: Vec<Move>)
     {
+        let mut total_steps = 1;
         for mov in moves {
             for _ in 0..mov.steps {
                 let pos = self.current.clone();
@@ -61,10 +68,26 @@ impl Wire {
                     Directions::L => Pos { x: pos.x - 1, y: pos.y },
                 };
 
-                self.route.insert(new_pos.clone(), new_pos.clone());
+                let min_steps: i32;
+                if self.route.contains_key(&new_pos) {
+                    min_steps = total_steps.min(self.route.get(&new_pos).unwrap().clone());
+                } else {
+                    min_steps = total_steps;
+                }
+                self.route.insert(new_pos.clone(), min_steps.clone() as i32);
+
                 self.current = new_pos.clone();
+                total_steps = total_steps + 1;
             }
         }
+    }
+
+    fn get_min_steps(self, pos: &Pos) -> i32
+    {
+        if self.route.contains_key(pos) {
+            return self.route.get(pos).unwrap().clone();
+        }
+        panic!("unknown pos");
     }
 }
 
@@ -140,6 +163,17 @@ mod tests {
         let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
         let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
         assert_eq!(159, intersect(&w1, &w2).iter().map(|x| { manhattan_distance([0, 0], [x.x, x.y]) }).min().unwrap());
+    }
+
+    #[test]
+    fn test_steps() {
+        let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
+        let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
+        assert_eq!(610, intersect(&w1, &w2).iter().map(|x| w1.clone().get_min_steps(x) + w2.clone().get_min_steps(x)).min().unwrap());
+
+        let w1 = Wire::from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
+        let w2 = Wire::from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
+        assert_eq!(410, intersect(&w1, &w2).iter().map(|x| w1.clone().get_min_steps(x) + w2.clone().get_min_steps(x)).min().unwrap());
     }
 
     #[test]
