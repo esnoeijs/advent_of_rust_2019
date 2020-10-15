@@ -1,5 +1,6 @@
 mod day1;
 mod day2;
+mod day3;
 
 use std::env;
 
@@ -14,6 +15,7 @@ fn main() {
     match day.parse::<u8>().unwrap_or(0) {
         1 => day1::solution(filename),
         2 => day2::solution(filename),
+        3 => day3::solution(filename),
         _ => panic!("unknown day number")
     }
 
