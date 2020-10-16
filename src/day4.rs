@@ -5,9 +5,17 @@ pub fn solution(filename: &String) {
         .expect("Something went wrong reading the file");
 
     let min_max: Vec<u32> = contents.split('-').map(|x| x.parse::<u32>().unwrap()).collect();
+
     let rules: Vec<&dyn PasswordRule> = vec![
         &IsCertainLength { length: 6 },
-        &HasSameSequentialDigits {},
+        &HasSequentialDigits { },
+        &HasSequentiallyHigherNumbers {},
+    ];
+    println!("{:?}", password_generator(min_max[0], min_max[1], rules).len());
+
+    let rules: Vec<&dyn PasswordRule> = vec![
+        &IsCertainLength { length: 6 },
+        &HasSequentialDigitsOfSize { size: 2 },
         &HasSequentiallyHigherNumbers {},
     ];
     println!("{:?}", password_generator(min_max[0], min_max[1], rules).len());
@@ -43,9 +51,14 @@ struct IsCertainLength {
     length: usize,
 }
 
-struct HasSameSequentialDigits {}
+struct HasSequentialDigits {}
+
+struct HasSequentialDigitsOfSize {
+    size: usize
+}
 
 struct HasSequentiallyHigherNumbers {}
+
 
 impl PasswordRule for IsCertainLength {
     fn is_valid(&self, password: &String) -> bool {
@@ -53,7 +66,7 @@ impl PasswordRule for IsCertainLength {
     }
 }
 
-impl PasswordRule for HasSameSequentialDigits {
+impl PasswordRule for HasSequentialDigits {
     fn is_valid(&self, password: &String) -> bool {
         let mut prev: char = ' ';
         for char in password.chars() {
@@ -63,6 +76,27 @@ impl PasswordRule for HasSameSequentialDigits {
             prev = char.clone();
         }
         return false;
+    }
+}
+
+impl PasswordRule for HasSequentialDigitsOfSize {
+    fn is_valid(&self, password: &String) -> bool {
+        let mut prev: char = ' ';
+        let mut i: usize = 1;
+        let mut groups: Vec<usize> = vec![];
+
+        for char in password.chars() {
+            if char.eq(&prev) {
+                i = i + 1;
+            } else if prev != ' ' {
+                groups.push(i.clone());
+                i = 1;
+            }
+            prev = char.clone();
+        }
+        groups.push(i.clone());
+
+        return  groups.contains(&self.size);
     }
 }
 
@@ -85,16 +119,29 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_apply_rules() {
+    fn test_apply_rules_part_1() {
         let rules: Vec<&dyn PasswordRule> = vec![
             &IsCertainLength { length: 6 },
-            &HasSameSequentialDigits {},
+            &HasSequentialDigits {},
             &HasSequentiallyHigherNumbers {},
         ];
 
         assert_eq!(true, apply_rules(&"111111", &rules));
         assert_eq!(false, apply_rules(&"223450", &rules));
         assert_eq!(false, apply_rules(&"123789", &rules));
+    }
+
+    #[test]
+    fn test_apply_rules_part_2() {
+        let rules: Vec<&dyn PasswordRule> = vec![
+            &IsCertainLength { length: 6 },
+            &HasSequentialDigitsOfSize { size: 2 },
+            &HasSequentiallyHigherNumbers {},
+        ];
+
+        assert_eq!(true, apply_rules(&"112233", &rules));
+        assert_eq!(false, apply_rules(&"123444", &rules));
+        assert_eq!(true, apply_rules(&"111122", &rules));
     }
 
     #[test]
@@ -107,10 +154,10 @@ mod tests {
 
     #[test]
     fn test_has_double_digits() {
-        assert_eq!(true, HasSameSequentialDigits {}.is_valid(&String::from("112233")));
-        assert_eq!(false, HasSameSequentialDigits {}.is_valid(&String::from("12345")));
-        assert_eq!(false, HasSameSequentialDigits {}.is_valid(&String::from("1234567")));
-        assert_eq!(false, HasSameSequentialDigits {}.is_valid(&String::from("123456")));
+        assert_eq!(true, HasSequentialDigitsOfSize { size: 2 }.is_valid(&String::from("112233")));
+        assert_eq!(true, HasSequentialDigitsOfSize { size: 3 }.is_valid(&String::from("1122233")));
+        assert_eq!(false, HasSequentialDigitsOfSize { size: 3 }.is_valid(&String::from("112233")));
+        assert_eq!(false, HasSequentialDigitsOfSize { size: 2 }.is_valid(&String::from("12345")));
     }
 
     #[test]
