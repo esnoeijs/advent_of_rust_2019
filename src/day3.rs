@@ -17,7 +17,7 @@ pub fn solution(filename: &String) {
 
     println!("{:?}", intersect(&wire_a, &wire_b)
         .iter()
-        .map(|x| { wire_a.clone().get_min_steps(x) + wire_b.clone().get_min_steps(x) })
+        .map(|x| { wire_a.get_min_steps(x) + wire_b.get_min_steps(x) })
         .min()
         .unwrap());
 }
@@ -82,7 +82,7 @@ impl Wire {
         }
     }
 
-    fn get_min_steps(self, pos: &Pos) -> i32
+    fn get_min_steps(&self, pos: &Pos) -> i32
     {
         if self.route.contains_key(pos) {
             return self.route.get(pos).unwrap().clone();
@@ -169,11 +169,11 @@ mod tests {
     fn test_steps() {
         let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
         let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
-        assert_eq!(610, intersect(&w1, &w2).iter().map(|x| w1.clone().get_min_steps(x) + w2.clone().get_min_steps(x)).min().unwrap());
+        assert_eq!(610, intersect(&w1, &w2).iter().map(|x| w1.get_min_steps(x) + w2.get_min_steps(x)).min().unwrap());
 
         let w1 = Wire::from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
         let w2 = Wire::from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
-        assert_eq!(410, intersect(&w1, &w2).iter().map(|x| w1.clone().get_min_steps(x) + w2.clone().get_min_steps(x)).min().unwrap());
+        assert_eq!(410, intersect(&w1, &w2).iter().map(|x| w1.get_min_steps(x) + w2.get_min_steps(x)).min().unwrap());
     }
 
     #[test]
