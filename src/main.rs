@@ -2,6 +2,7 @@ mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
 
 use std::env;
 
@@ -18,6 +19,7 @@ fn main() {
         2 => day2::solution(filename),
         3 => day3::solution(filename),
         4 => day4::solution(filename),
+        5 => day5::solution(filename),
         _ => panic!("unknown day number")
     }
 
