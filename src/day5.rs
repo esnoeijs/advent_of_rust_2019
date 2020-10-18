@@ -1,10 +1,9 @@
-use std::fs;
 use std::collections::HashMap;
 use std::fmt::Write;
+use std::fs;
 
 pub fn solution(filename: &String) {
-    let contents = fs::read_to_string(filename)
-        .expect("Something went wrong reading the file");
+    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
 
     let mut prog = Program::from(contents.as_str());
     println!("{:?}", prog.execute("1"));
@@ -45,7 +44,7 @@ impl Program {
                 3 => Input::apply(self),
                 4 => Output::apply(self),
                 99 => return self.output.clone(),
-                _ => panic!("unknown opcode")
+                _ => panic!("unknown opcode"),
             }
         }
     }
@@ -62,7 +61,7 @@ trait Operation {
 
 #[derive(Debug)]
 struct ArgumentModes {
-    modes: Vec<u32>
+    modes: Vec<u32>,
 }
 
 impl ArgumentModes {
@@ -73,8 +72,10 @@ impl ArgumentModes {
         }
 
         let modes: Vec<u32> = opcode_string
-            .get(..opcode_string.len() - 2).unwrap()
-            .chars().rev()
+            .get(..opcode_string.len() - 2)
+            .unwrap()
+            .chars()
+            .rev()
             .map(|char| char.to_digit(10).unwrap())
             .collect();
 
@@ -85,8 +86,7 @@ impl ArgumentModes {
         return self.modes.iter().nth(idx).unwrap_or(&0).clone();
     }
 
-    fn get_value(&self, arg: usize, idx: usize, opcodes: &HashMap<usize, i32>) -> i32
-    {
+    fn get_value(&self, arg: usize, idx: usize, opcodes: &HashMap<usize, i32>) -> i32 {
         match self.get_mode(arg) {
             0 => opcodes[&(opcodes[&idx] as usize)],
             1 => opcodes[&idx],
@@ -104,8 +104,7 @@ struct Input {}
 struct Output {}
 
 impl Multiplication {
-    fn apply(program: &mut Program)
-    {
+    fn apply(program: &mut Program) {
         let arg_modes = ArgumentModes::new(program.opcodes[&program.index]);
         program.next();
         let arg_a = arg_modes.get_value(0, program.index, &program.opcodes);
@@ -120,8 +119,7 @@ impl Multiplication {
 }
 
 impl Addition {
-    fn apply(program: &mut Program)
-    {
+    fn apply(program: &mut Program) {
         let arg_modes = ArgumentModes::new(program.opcodes[&program.index]);
         program.next();
         let arg_a = arg_modes.get_value(0, program.index, &program.opcodes);
@@ -136,35 +134,48 @@ impl Addition {
 }
 
 impl Input {
-    fn apply(program: &mut Program)
-    {
+    fn apply(program: &mut Program) {
         let arg_modes = ArgumentModes::new(program.opcodes[&program.index]);
         program.next();
         let position = program.opcodes[&program.index];
-        println!("{:?} Input {:?} {:?}", program.index - 1, position, arg_modes);
+        println!(
+            "{:?} Input {:?} {:?}",
+            program.index - 1,
+            position,
+            arg_modes
+        );
 
-        program.opcodes.insert(position as usize, program.input.parse().unwrap());
+        program
+            .opcodes
+            .insert(position as usize, program.input.parse().unwrap());
         program.next();
     }
 }
 
 impl Output {
-    fn apply(program: &mut Program)
-    {
+    fn apply(program: &mut Program) {
         let arg_modes = ArgumentModes::new(program.opcodes[&program.index]);
         program.next();
         let position = match arg_modes.get_mode(0) {
             0 => program.opcodes[&program.index],
             1 => program.index as i32,
-            _ => panic!("wrong mode")
+            _ => panic!("wrong mode"),
         };
 
         program.next();
-        println!("{:?} Output {:?} {:?}", program.index - 2, position, arg_modes);
+        println!(
+            "{:?} Output {:?} {:?}",
+            program.index - 2,
+            position,
+            arg_modes
+        );
 
         let value: i32 = program.opcodes[&(position as usize)];
 
-        program.output.write_str(format!("{}\n", value.to_string()).as_str()).unwrap();
+        program
+            .output
+            .write_str(format!("{}\n", value.to_string()).as_str())
+            .unwrap();
     }
 }
 
@@ -183,6 +194,9 @@ mod tests {
         let mut prog = Program::from("1002,4,3,4,33");
         prog.execute("");
         assert_eq!(99, prog.opcodes[&4]);
+
+        let mut prog = Program::from("2,4,2,0,4,0,99");
+        assert_eq!("8\n", prog.execute(""));
     }
 
     #[test]
@@ -193,7 +207,7 @@ mod tests {
     }
 
     #[test]
-    fn test_program() {
+    fn test_program_day2() {
         let mut prog = Program::from("1,0,0,0,99");
         prog.execute("");
         assert_eq!(2, prog.opcodes[&(0 as usize)]);

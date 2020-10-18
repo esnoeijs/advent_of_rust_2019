@@ -20,7 +20,6 @@ fn main() {
         3 => day3::solution(filename),
         4 => day4::solution(filename),
         5 => day5::solution(filename),
-        _ => panic!("unknown day number")
+        _ => panic!("unknown day number"),
     }
-
 }

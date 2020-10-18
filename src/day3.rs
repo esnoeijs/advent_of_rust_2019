@@ -1,29 +1,39 @@
-use std::fs;
 use std::collections::HashMap;
+use std::fs;
 
 pub fn solution(filename: &String) {
-    let contents = fs::read_to_string(filename)
-        .expect("Something went wrong reading the file");
+    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
 
-    let wires: Vec<Wire> = contents.lines().map(|str| { Wire::from(str) }).collect();
+    let wires: Vec<Wire> = contents.lines().map(|str| Wire::from(str)).collect();
     let wire_a = wires[0].clone();
     let wire_b = wires[1].clone();
 
-    println!("{:?}", intersect(&wire_a, &wire_b)
-        .iter()
-        .map(|x| { manhattan_distance([0, 0], [x.x, x.y]) })
-        .min()
-        .unwrap());
+    println!(
+        "{:?}",
+        intersect(&wire_a, &wire_b)
+            .iter()
+            .map(|x| { manhattan_distance([0, 0], [x.x, x.y]) })
+            .min()
+            .unwrap()
+    );
 
-    println!("{:?}", intersect(&wire_a, &wire_b)
-        .iter()
-        .map(|x| { wire_a.get_min_steps(x) + wire_b.get_min_steps(x) })
-        .min()
-        .unwrap());
+    println!(
+        "{:?}",
+        intersect(&wire_a, &wire_b)
+            .iter()
+            .map(|x| { wire_a.get_min_steps(x) + wire_b.get_min_steps(x) })
+            .min()
+            .unwrap()
+    );
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-enum Directions { U, D, R, L }
+enum Directions {
+    U,
+    D,
+    R,
+    L,
+}
 
 #[derive(Debug, PartialEq)]
 struct Move {
@@ -38,8 +48,7 @@ struct Wire {
 }
 
 impl Wire {
-    fn new() -> Wire
-    {
+    fn new() -> Wire {
         let mut map = HashMap::new();
         map.insert(Pos::start(), 0);
         return Wire {
@@ -48,24 +57,34 @@ impl Wire {
         };
     }
 
-    fn new_from_route(moves: Vec<Move>) -> Wire
-    {
+    fn new_from_route(moves: Vec<Move>) -> Wire {
         let mut wire = Wire::new();
         wire.apply_moves(moves);
         return wire;
     }
 
-    fn apply_moves(&mut self, moves: Vec<Move>)
-    {
+    fn apply_moves(&mut self, moves: Vec<Move>) {
         let mut total_steps = 1;
         for mov in moves {
             for _ in 0..mov.steps {
                 let pos = self.current.clone();
                 let new_pos = match mov.direction {
-                    Directions::U => Pos { x: pos.x, y: pos.y + 1 },
-                    Directions::D => Pos { x: pos.x, y: pos.y - 1 },
-                    Directions::R => Pos { x: pos.x + 1, y: pos.y },
-                    Directions::L => Pos { x: pos.x - 1, y: pos.y },
+                    Directions::U => Pos {
+                        x: pos.x,
+                        y: pos.y + 1,
+                    },
+                    Directions::D => Pos {
+                        x: pos.x,
+                        y: pos.y - 1,
+                    },
+                    Directions::R => Pos {
+                        x: pos.x + 1,
+                        y: pos.y,
+                    },
+                    Directions::L => Pos {
+                        x: pos.x - 1,
+                        y: pos.y,
+                    },
                 };
 
                 let min_steps: i32;
@@ -82,8 +101,7 @@ impl Wire {
         }
     }
 
-    fn get_min_steps(&self, pos: &Pos) -> i32
-    {
+    fn get_min_steps(&self, pos: &Pos) -> i32 {
         if self.route.contains_key(pos) {
             return self.route.get(pos).unwrap().clone();
         }
@@ -98,29 +116,26 @@ struct Pos {
 }
 
 impl Pos {
-    fn start() -> Pos
-    {
+    fn start() -> Pos {
         return Pos { x: 0, y: 0 };
     }
 }
 
 impl From<&str> for Wire {
-    fn from(str: &str) -> Self
-    {
-        Wire::new_from_route(str.split(',').map(|x| { Move::from(x) }).collect())
+    fn from(str: &str) -> Self {
+        Wire::new_from_route(str.split(',').map(|x| Move::from(x)).collect())
     }
 }
 
 impl From<&str> for Move {
-    fn from(str: &str) -> Self
-    {
+    fn from(str: &str) -> Self {
         let direction: Directions;
         match str.chars().nth(0).unwrap() {
             'U' => direction = Directions::U,
             'D' => direction = Directions::D,
             'L' => direction = Directions::L,
             'R' => direction = Directions::R,
-            _ => panic!("unknown direction")
+            _ => panic!("unknown direction"),
         }
 
         let steps = (str[1..]).parse::<u32>();
@@ -128,12 +143,14 @@ impl From<&str> for Move {
             panic!("not a number");
         }
 
-        return Move { direction, steps: steps.unwrap() };
+        return Move {
+            direction,
+            steps: steps.unwrap(),
+        };
     }
 }
 
-fn intersect(wire_a: &Wire, wire_b: &Wire) -> Vec<Pos>
-{
+fn intersect(wire_a: &Wire, wire_b: &Wire) -> Vec<Pos> {
     let mut intersecting_positions: Vec<Pos> = vec![];
     for pos in wire_a.route.keys() {
         if wire_b.route.contains_key(pos) {
@@ -145,8 +162,7 @@ fn intersect(wire_a: &Wire, wire_b: &Wire) -> Vec<Pos>
     return intersecting_positions;
 }
 
-fn manhattan_distance(start: [i32; 2], end: [i32; 2]) -> i32
-{
+fn manhattan_distance(start: [i32; 2], end: [i32; 2]) -> i32 {
     return (start[0] - end[0]).abs() + (start[1] - end[1]).abs();
 }
 
@@ -158,26 +174,60 @@ mod tests {
     fn test() {
         let w1 = Wire::from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
         let w2 = Wire::from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
-        assert_eq!(135, intersect(&w1, &w2).iter().map(|x| { manhattan_distance([0, 0], [x.x, x.y]) }).min().unwrap());
+        assert_eq!(
+            135,
+            intersect(&w1, &w2)
+                .iter()
+                .map(|x| { manhattan_distance([0, 0], [x.x, x.y]) })
+                .min()
+                .unwrap()
+        );
 
         let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
         let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
-        assert_eq!(159, intersect(&w1, &w2).iter().map(|x| { manhattan_distance([0, 0], [x.x, x.y]) }).min().unwrap());
+        assert_eq!(
+            159,
+            intersect(&w1, &w2)
+                .iter()
+                .map(|x| { manhattan_distance([0, 0], [x.x, x.y]) })
+                .min()
+                .unwrap()
+        );
     }
 
     #[test]
     fn test_steps() {
         let w1 = Wire::from("R75,D30,R83,U83,L12,D49,R71,U7,L72");
         let w2 = Wire::from("U62,R66,U55,R34,D71,R55,D58,R83");
-        assert_eq!(610, intersect(&w1, &w2).iter().map(|x| w1.get_min_steps(x) + w2.get_min_steps(x)).min().unwrap());
+        assert_eq!(
+            610,
+            intersect(&w1, &w2)
+                .iter()
+                .map(|x| w1.get_min_steps(x) + w2.get_min_steps(x))
+                .min()
+                .unwrap()
+        );
 
         let w1 = Wire::from("R98,U47,R26,D63,R33,U87,L62,D20,R33,U53,R51");
         let w2 = Wire::from("U98,R91,D20,R16,D67,R40,U7,R15,U6,R7");
-        assert_eq!(410, intersect(&w1, &w2).iter().map(|x| w1.get_min_steps(x) + w2.get_min_steps(x)).min().unwrap());
+        assert_eq!(
+            410,
+            intersect(&w1, &w2)
+                .iter()
+                .map(|x| w1.get_min_steps(x) + w2.get_min_steps(x))
+                .min()
+                .unwrap()
+        );
     }
 
     #[test]
     fn string_to_move_mapping() {
-        assert_eq!(Move { direction: Directions::U, steps: 1 }, Move::from("U1"));
+        assert_eq!(
+            Move {
+                direction: Directions::U,
+                steps: 1
+            },
+            Move::from("U1")
+        );
     }
 }
